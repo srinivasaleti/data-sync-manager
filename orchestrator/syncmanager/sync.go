@@ -7,6 +7,7 @@ import (
 )
 
 type SyncConfig struct {
+	Cron   string
 	Source string
 	Target string
 }
@@ -25,7 +26,9 @@ func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
 		s.logger.Error(err, "unable to get target connector")
 		return err
 	}
-	s.syncData(sourceConnector, targetConnector)
+	s.scheduler.ScheduleJob(config.Cron, func() {
+		s.syncData(sourceConnector, targetConnector)
+	})
 	return nil
 }
 

@@ -7,14 +7,25 @@ import (
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestScheduleAJobToSyncData(t *testing.T) {
-	mockFactory := factory.NewMockFactory()
-	syncManager := New(mockFactory, logger.NewLogger())
+var mockFactory = factory.NewMockFactory()
+var mockScheduler = scheduler.NewMockScheduler()
+var sourceConnector = &connectors.MockConnector{}
+var targetConnector = &connectors.MockConnector{}
+var syncManager = New(mockFactory, mockScheduler, logger.NewLogger())
 
+func reset() {
+	sourceConnector.Reset()
+	targetConnector.Reset()
+	mockScheduler.Reset()
+}
+
+func TestScheduleAJobToSyncData(t *testing.T) {
 	t.Run("should handle connectors not found errors", func(t *testing.T) {
+		reset()
 		assert.Equal(t, syncManager.scheduleSyncData(SyncConfig{}), errConnectorsRequired)
 
 		assert.Equal(t, syncManager.scheduleSyncData(SyncConfig{
@@ -22,24 +33,33 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 			Target: "local",
 		}), factory.ErrConnectorNotFound)
 
-		mockFactory.SetGetConnector("s3", &connectors.MockConnector{})
+		mockFactory.SetConnector("s3", &connectors.MockConnector{})
 		assert.Equal(t, syncManager.scheduleSyncData(SyncConfig{
 			Source: "s3",
 			Target: "local",
 		}), factory.ErrConnectorNotFound)
 	})
+
+	t.Run("should schedule the job", func(t *testing.T) {
+		mockFactory.SetConnector("s3", sourceConnector)
+		mockFactory.SetConnector("local", targetConnector)
+
+		err := syncManager.scheduleSyncData(SyncConfig{
+			Cron:   "* * * * * 1",
+			Source: "s3",
+			Target: "local",
+		})
+
+		assert.Nil(t, err)
+		assert.Equal(t, mockScheduler.GetLatestCronExpression(), "* * * * * 1")
+	})
 }
 
 func TestSyncData(t *testing.T) {
-	mockFactory := factory.NewMockFactory()
-	syncManager := New(mockFactory, logger.NewLogger())
-	sourceConnector := &connectors.MockConnector{}
-	targetConnector := &connectors.MockConnector{}
 	file := "somefile"
 
 	t.Run("should throw error when there is an error while getting data from source connector", func(t *testing.T) {
-		sourceConnector.Reset()
-		targetConnector.Reset()
+		reset()
 		sourceConnectorGetErr := errors.New("unable to get from source")
 		sourceConnector.SetGetErr(sourceConnectorGetErr)
 
@@ -52,8 +72,7 @@ func TestSyncData(t *testing.T) {
 	})
 
 	t.Run("should throw error when there is an error while adding data to target connector", func(t *testing.T) {
-		sourceConnector.Reset()
-		targetConnector.Reset()
+		reset()
 		targetConnectorPutErr := errors.New("unable to add to target")
 		sourceConnector.SetGetResponse(file)
 		targetConnector.SetPutErr(targetConnectorPutErr)
@@ -68,8 +87,7 @@ func TestSyncData(t *testing.T) {
 	})
 
 	t.Run("should sync data", func(t *testing.T) {
-		sourceConnector.Reset()
-		targetConnector.Reset()
+		reset()
 		sourceConnector.SetGetResponse(file)
 
 		err := syncManager.syncData(sourceConnector, targetConnector)

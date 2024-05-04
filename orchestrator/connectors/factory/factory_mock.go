@@ -21,7 +21,7 @@ func (f *MockFactory) SetGetConnectorErr(err error) {
 	f.getConnectorErr = err
 }
 
-func (f *MockFactory) SetGetConnector(connectorString string, connector connectors.Connector) {
+func (f *MockFactory) SetConnector(connectorString string, connector connectors.Connector) {
 	f.connectors[connectorString] = connector
 }
 

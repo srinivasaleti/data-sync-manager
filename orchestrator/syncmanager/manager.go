@@ -3,11 +3,13 @@ package syncmanager
 import (
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler"
 )
 
 type SyncManager struct {
-	logger  logger.ILogger
-	factory factory.IFactory
+	logger    logger.ILogger
+	factory   factory.IFactory
+	scheduler scheduler.IScheduler
 }
 
 func (s *SyncManager) Manage(configs []SyncConfig) {
@@ -16,9 +18,10 @@ func (s *SyncManager) Manage(configs []SyncConfig) {
 	}
 }
 
-func New(factory factory.IFactory, logger logger.ILogger) *SyncManager {
+func New(factory factory.IFactory, scheduler scheduler.IScheduler, logger logger.ILogger) *SyncManager {
 	return &SyncManager{
-		factory: factory,
-		logger:  logger,
+		factory:   factory,
+		logger:    logger,
+		scheduler: scheduler,
 	}
 }
