@@ -3,12 +3,14 @@ package scheduler
 // SchedulerMock mocks a scheduler
 type SchedulerMock struct {
 	cronExpression string
+	scheduledTask  Task
 	scheduleJobErr error
 	IScheduler
 }
 
 func (s *SchedulerMock) ScheduleJob(cronExpression string, task Task) (string, error) {
 	s.cronExpression = cronExpression
+	s.scheduledTask = task
 	return "id", s.scheduleJobErr
 }
 
@@ -29,6 +31,9 @@ func (s *SchedulerMock) Shutdown() error {
 func (s *SchedulerMock) Reset() {
 	s.scheduleJobErr = nil
 	s.cronExpression = ""
+}
+func (s *SchedulerMock) GetScheduledTask() Task {
+	return s.scheduledTask
 }
 
 func NewMockScheduler() *SchedulerMock {

@@ -16,6 +16,7 @@ var mockScheduler = scheduler.NewMockScheduler()
 var sourceConnector = &connectors.MockConnector{}
 var targetConnector = &connectors.MockConnector{}
 var syncManager = New(mockFactory, mockScheduler, logger.NewLogger())
+var file = "some file"
 
 func reset() {
 	sourceConnector.Reset()
@@ -43,27 +44,32 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 	t.Run("should schedule the job", func(t *testing.T) {
 		mockFactory.SetConnector("s3", sourceConnector)
 		mockFactory.SetConnector("local", targetConnector)
+		sourceConnector.SetGetResponse(file)
 
 		err := syncManager.scheduleSyncData(SyncConfig{
-			Cron:   "* * * * * 1",
-			Source: "s3",
-			Target: "local",
+			Cron:      "* * * * * 1",
+			Source:    "s3",
+			Target:    "local",
+			ObjectKey: "id",
 		})
 
 		assert.Nil(t, err)
 		assert.Equal(t, mockScheduler.GetLatestCronExpression(), "* * * * * 1")
+
+		mockScheduler.GetScheduledTask()()
+
+		assert.True(t, sourceConnector.GetShouldBeCalledWith("id"))
+		assert.True(t, targetConnector.PutShouldBeCalledWith(file))
 	})
 }
 
 func TestSyncData(t *testing.T) {
-	file := "somefile"
-
 	t.Run("should throw error when there is an error while getting data from source connector", func(t *testing.T) {
 		reset()
 		sourceConnectorGetErr := errors.New("unable to get from source")
 		sourceConnector.SetGetErr(sourceConnectorGetErr)
 
-		err := syncManager.syncData(sourceConnector, targetConnector)
+		err := syncManager.syncData(sourceConnector, targetConnector, "id")
 
 		assert.Error(t, err)
 		assert.Equal(t, err, sourceConnectorGetErr)
@@ -77,7 +83,7 @@ func TestSyncData(t *testing.T) {
 		sourceConnector.SetGetResponse(file)
 		targetConnector.SetPutErr(targetConnectorPutErr)
 
-		err := syncManager.syncData(sourceConnector, targetConnector)
+		err := syncManager.syncData(sourceConnector, targetConnector, "id")
 
 		assert.Error(t, err)
 		assert.Equal(t, err, targetConnectorPutErr)
@@ -90,7 +96,7 @@ func TestSyncData(t *testing.T) {
 		reset()
 		sourceConnector.SetGetResponse(file)
 
-		err := syncManager.syncData(sourceConnector, targetConnector)
+		err := syncManager.syncData(sourceConnector, targetConnector, "id")
 
 		assert.Nil(t, err)
 		assert.True(t, sourceConnector.GetShouldBeCalledWith("id"))

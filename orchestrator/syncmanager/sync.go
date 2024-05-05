@@ -7,9 +7,10 @@ import (
 )
 
 type SyncConfig struct {
-	Cron   string
-	Source string
-	Target string
+	Cron      string
+	Source    string
+	Target    string
+	ObjectKey string
 }
 
 func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
@@ -27,14 +28,14 @@ func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
 		return err
 	}
 	s.scheduler.ScheduleJob(config.Cron, func() {
-		s.syncData(sourceConnector, targetConnector)
+		s.syncData(sourceConnector, targetConnector, config.ObjectKey)
 	})
 	return nil
 }
 
-func (s *SyncManager) syncData(source connectors.Connector, target connectors.Connector) error {
+func (s *SyncManager) syncData(source connectors.Connector, target connectors.Connector, objectKey string) error {
 	s.logger.Info("syncing data", "source", source.ToString(), "target", target.ToString())
-	data, err := source.Get("id")
+	data, err := source.Get(objectKey)
 	s.logger.Info("successfully got data from source")
 	if err != nil {
 		s.logger.Error(err, "unable to get the data from source")
