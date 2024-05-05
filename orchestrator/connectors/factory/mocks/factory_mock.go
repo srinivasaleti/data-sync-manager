@@ -2,19 +2,20 @@ package factory
 
 import (
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
 )
 
 type MockFactory struct {
 	getConnectorErr error
 	connectors      map[string]connectors.Connector
-	IFactory
+	factory.IFactory
 }
 
-func (f *MockFactory) GetConnector(connector string) (connectors.Connector, error) {
-	if f.connectors[connector] == nil {
-		return nil, ErrConnectorNotFound
+func (f *MockFactory) GetConnector(connector connectors.Config) (connectors.Connector, error) {
+	if f.connectors[connector.Type] == nil {
+		return nil, factory.ErrConnectorNotFound
 	}
-	return f.connectors[connector], nil
+	return f.connectors[connector.Type], nil
 }
 
 func (f *MockFactory) SetGetConnectorErr(err error) {

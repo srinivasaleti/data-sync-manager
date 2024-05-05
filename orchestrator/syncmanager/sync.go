@@ -1,22 +1,17 @@
 package syncmanager
 
 import (
-	"errors"
-
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
 )
 
 type SyncConfig struct {
 	Cron      string
-	Source    string
-	Target    string
+	Source    connectors.Config
+	Target    connectors.Config
 	ObjectKey string
 }
 
 func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
-	if len(config.Source) == 0 || len(config.Target) == 0 {
-		return errors.New("source and target connectors are required")
-	}
 	sourceConnector, err := s.factory.GetConnector(config.Source)
 	if err != nil {
 		s.logger.Error(err, "unable to get source connector")
@@ -36,13 +31,11 @@ func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
 func (s *SyncManager) syncData(source connectors.Connector, target connectors.Connector, objectKey string) error {
 	s.logger.Info("syncing data", "source", source.ToString(), "target", target.ToString())
 	data, err := source.Get(objectKey)
-	s.logger.Info("successfully got data from source")
 	if err != nil {
 		s.logger.Error(err, "unable to get the data from source")
 		return err
 	}
-	s.logger.Info("adding data to target")
-	err = target.Put(data)
+	err = target.Put(objectKey, data)
 	if err != nil {
 		s.logger.Error(err, "unable to create the data in target")
 		return err

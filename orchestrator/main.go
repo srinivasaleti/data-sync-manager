@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler"
@@ -18,12 +19,15 @@ func main() {
 		logger.Error(err, "unable to create scheduler")
 		return
 	}
-	s := syncmanager.New(factory.New(), jobScheduler, logger)
+	connectorsFactory := factory.New(logger)
+	s := syncmanager.New(connectorsFactory, jobScheduler, logger)
+
 	s.Manage([]syncmanager.SyncConfig{
 		{
-			Cron:   "* * * * * *",
-			Source: "s3",
-			Target: "local",
+			Cron:      "* * * * * *",
+			Source:    connectors.Config{Type: "s3"},
+			ObjectKey: "20240101_062739.jpg",
+			Target:    connectors.Config{Type: "local"},
 		},
 	})
 	jobScheduler.Start()

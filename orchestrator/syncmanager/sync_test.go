@@ -1,17 +1,20 @@
 package syncmanager
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
+	factorymocks "github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory/mocks"
 	connectorsmock "github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/mocks"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
 	schedulermock "github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
-var mockFactory = factory.NewMockFactory()
+var mockFactory = factorymocks.NewMockFactory()
 var mockScheduler = schedulermock.NewMockScheduler()
 var sourceConnector = &connectorsmock.MockConnector{}
 var targetConnector = &connectorsmock.MockConnector{}
@@ -27,17 +30,16 @@ func reset() {
 func TestScheduleAJobToSyncData(t *testing.T) {
 	t.Run("should handle connectors not found errors", func(t *testing.T) {
 		reset()
-		assert.Equal(t, syncManager.scheduleSyncData(SyncConfig{}), errConnectorsRequired)
 
 		assert.Equal(t, syncManager.scheduleSyncData(SyncConfig{
-			Source: "s3",
-			Target: "local",
+			Source: connectors.Config{Type: "s3"},
+			Target: connectors.Config{Type: "local"},
 		}), factory.ErrConnectorNotFound)
 
 		mockFactory.SetConnector("s3", &connectorsmock.MockConnector{})
 		assert.Equal(t, syncManager.scheduleSyncData(SyncConfig{
-			Source: "s3",
-			Target: "local",
+			Source: connectors.Config{Type: "s3"},
+			Target: connectors.Config{Type: "local"},
 		}), factory.ErrConnectorNotFound)
 	})
 
@@ -45,11 +47,12 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 		mockFactory.SetConnector("s3", sourceConnector)
 		mockFactory.SetConnector("local", targetConnector)
 		sourceConnector.SetGetResponse(file)
+		fileBytes, _ := json.Marshal(file)
 
 		err := syncManager.scheduleSyncData(SyncConfig{
 			Cron:      "* * * * * 1",
-			Source:    "s3",
-			Target:    "local",
+			Source:    connectors.Config{Type: "s3"},
+			Target:    connectors.Config{Type: "local"},
 			ObjectKey: "id",
 		})
 
@@ -59,7 +62,7 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 		mockScheduler.GetScheduledTask()()
 
 		assert.True(t, sourceConnector.GetShouldBeCalledWith("id"))
-		assert.True(t, targetConnector.PutShouldBeCalledWith(file))
+		assert.True(t, targetConnector.PutShouldBeCalledWith("id", fileBytes))
 	})
 }
 
@@ -95,12 +98,13 @@ func TestSyncData(t *testing.T) {
 	t.Run("should sync data", func(t *testing.T) {
 		reset()
 		sourceConnector.SetGetResponse(file)
-
+		fileBytes, _ := json.Marshal(file)
 		err := syncManager.syncData(sourceConnector, targetConnector, "id")
 
 		assert.Nil(t, err)
 		assert.True(t, sourceConnector.GetShouldBeCalledWith("id"))
-		assert.True(t, targetConnector.PutShouldBeCalledWith(file))
+
+		assert.True(t, targetConnector.PutShouldBeCalledWith("id", fileBytes))
 		assert.Equal(t, sourceConnector.NumberOfGetCalls(), 1)
 		assert.Equal(t, targetConnector.NumberOfPutCalls(), 1)
 	})
