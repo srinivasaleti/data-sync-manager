@@ -4,17 +4,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
+	connectorsmock "github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/mocks"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
-	"github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler"
+	schedulermock "github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 var mockFactory = factory.NewMockFactory()
-var mockScheduler = scheduler.NewMockScheduler()
-var sourceConnector = &connectors.MockConnector{}
-var targetConnector = &connectors.MockConnector{}
+var mockScheduler = schedulermock.NewMockScheduler()
+var sourceConnector = &connectorsmock.MockConnector{}
+var targetConnector = &connectorsmock.MockConnector{}
 var syncManager = New(mockFactory, mockScheduler, logger.NewLogger())
 var file = "some file"
 
@@ -34,7 +34,7 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 			Target: "local",
 		}), factory.ErrConnectorNotFound)
 
-		mockFactory.SetConnector("s3", &connectors.MockConnector{})
+		mockFactory.SetConnector("s3", &connectorsmock.MockConnector{})
 		assert.Equal(t, syncManager.scheduleSyncData(SyncConfig{
 			Source: "s3",
 			Target: "local",

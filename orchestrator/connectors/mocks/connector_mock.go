@@ -1,11 +1,14 @@
-package connectors
+package mocks
 
 import (
 	"reflect"
+
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
 )
 
 // MockConnector mocks a connector and its methods
 type MockConnector struct {
+	connectors.Connector
 	getErr       error
 	getPayload   interface{}
 	getResponse  interface{}
