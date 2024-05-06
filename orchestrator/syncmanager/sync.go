@@ -5,6 +5,9 @@ import (
 	"sync"
 
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler"
 )
 
 var errConnectorsRequired = errors.New("source and target connectors are required")
@@ -15,9 +18,24 @@ type SyncConfig struct {
 	Target connectors.Config `yaml:"target"`
 }
 
-// scheduleSyncData schedules the synchronization of data between the source and target connectors
+type SyncManager struct {
+	logger    logger.ILogger
+	factory   factory.IFactory
+	scheduler scheduler.IScheduler
+}
+
+// New return syncconfig
+func New(factory factory.IFactory, scheduler scheduler.IScheduler, logger logger.ILogger) *SyncManager {
+	return &SyncManager{
+		factory:   factory,
+		logger:    logger,
+		scheduler: scheduler,
+	}
+}
+
+// Manage schedules the synchronization of data between the source and target connectors
 // based on the provided sync configuration.
-func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
+func (s *SyncManager) Manage(config *SyncConfig) error {
 	sourceConnector, err := s.factory.GetConnector(config.Source)
 	if err != nil {
 		s.logger.Error(err, "unable to get source connector")

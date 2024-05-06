@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfi(t *testing.T) {
+func TestConfig(t *testing.T) {
 	t.Run("should handle error while reading file", func(t *testing.T) {
 		config, err := GetConfig("random_file")
 		assert.Error(t, err)
@@ -18,7 +18,7 @@ func TestConfi(t *testing.T) {
 	t.Run("should read config", func(t *testing.T) {
 		config, err := GetConfig("./mocks/config.yaml")
 		assert.Nil(t, err)
-		assert.Equal(t, config[0], syncmanager.SyncConfig{
+		assert.Equal(t, *config, syncmanager.SyncConfig{
 			Cron: "* * * * * *",
 			Source: connectors.Config{
 				Type: "s3",
