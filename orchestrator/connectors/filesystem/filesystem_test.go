@@ -59,3 +59,14 @@ func TestParseConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestExist(t *testing.T) {
+	connector, err := New(logger.NewLogger(), map[string]string{
+		"outdir": "",
+	})
+	assert.NoError(t, err)
+	assert.True(t, connector.Exists("./filesystem.go"))
+
+	assert.NoError(t, err)
+	assert.False(t, connector.Exists("./not_exist_filesystem.go"))
+}

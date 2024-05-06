@@ -30,6 +30,10 @@ func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
 
 func (s *SyncManager) syncData(source connectors.Connector, target connectors.Connector, objectKey string) error {
 	s.logger.Info("syncing data", "source", source.ToString(), "target", target.ToString())
+	if target.Exists(objectKey) {
+		s.logger.Info("specified key is already exists in obj key", "key", objectKey)
+		return nil
+	}
 	data, err := source.Get(objectKey)
 	if err != nil {
 		s.logger.Error(err, "unable to get the data from source")

@@ -67,6 +67,17 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 }
 
 func TestSyncData(t *testing.T) {
+	t.Run("should skip if target has already specified object", func(t *testing.T) {
+		reset()
+		targetConnector.SetExists(true)
+
+		err := syncManager.syncData(sourceConnector, targetConnector, "id")
+
+		assert.Nil(t, err)
+		assert.False(t, sourceConnector.GetShouldBeCalledWith("id"))
+		assert.Equal(t, targetConnector.NumberOfGetCalls(), 0)
+	})
+
 	t.Run("should throw error when there is an error while getting data from source connector", func(t *testing.T) {
 		reset()
 		sourceConnectorGetErr := errors.New("unable to get from source")

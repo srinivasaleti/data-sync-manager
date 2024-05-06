@@ -66,6 +66,15 @@ func (s *FileSystemConnector) ToString() string {
 	return "filesystem"
 }
 
+func (connector *FileSystemConnector) Exists(key string) bool {
+	keyPath := filepath.Join(connector.OutDirectory, key)
+	_, err := os.Stat(keyPath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 func New(logger logger.ILogger, configMap map[string]string) (*FileSystemConnector, error) {
 	config, err := parseConfig(configMap)
 	if err != nil {

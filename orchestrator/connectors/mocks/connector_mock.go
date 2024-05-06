@@ -17,68 +17,78 @@ type MockConnector struct {
 	noOfGetCalls int
 	putErr       error
 	putPayload   interface{}
+	exists       bool
 }
 
-func (s *MockConnector) Get(key string) ([]byte, error) {
-	s.getPayload = key
-	s.noOfGetCalls = s.noOfGetCalls + 1
-	byteResponse, err := json.Marshal(s.getResponse)
+func (mock *MockConnector) Get(key string) ([]byte, error) {
+	mock.getPayload = key
+	mock.noOfGetCalls = mock.noOfGetCalls + 1
+	byteResponse, err := json.Marshal(mock.getResponse)
 	if err != nil {
 		return nil, err
 	}
-	return byteResponse, s.getErr
+	return byteResponse, mock.getErr
 }
 
-func (s *MockConnector) SetGetResponse(data interface{}) {
-	s.getResponse = data
+func (mock *MockConnector) SetGetResponse(data interface{}) {
+	mock.getResponse = data
 }
 
-func (s *MockConnector) SetGetErr(err error) {
-	s.getErr = err
+func (mock *MockConnector) SetGetErr(err error) {
+	mock.getErr = err
 }
 
-func (s *MockConnector) GetShouldBeCalledWith(id string) bool {
-	if s.getPayload == id {
+func (mock *MockConnector) GetShouldBeCalledWith(id string) bool {
+	if mock.getPayload == id {
 		return true
 	}
 	return false
 }
 
-func (s *MockConnector) Put(key string, data []byte) error {
-	s.putPayload = data
-	s.noOfPutCalls = s.noOfPutCalls + 1
-	return s.putErr
+func (mock *MockConnector) Put(key string, data []byte) error {
+	mock.putPayload = data
+	mock.noOfPutCalls = mock.noOfPutCalls + 1
+	return mock.putErr
 }
 
-func (s *MockConnector) SetPutErr(err error) {
-	s.putErr = err
+func (mock *MockConnector) SetPutErr(err error) {
+	mock.putErr = err
 }
 
-func (s *MockConnector) PutShouldBeCalledWith(key string, payload interface{}) bool {
-	if reflect.DeepEqual(payload, s.putPayload) == true {
+func (mock *MockConnector) PutShouldBeCalledWith(key string, payload interface{}) bool {
+	if reflect.DeepEqual(payload, mock.putPayload) == true {
 		return true
 	}
 	return false
 }
 
-func (s *MockConnector) NumberOfPutCalls() int {
-	return s.noOfPutCalls
+func (mock *MockConnector) NumberOfPutCalls() int {
+	return mock.noOfPutCalls
 }
 
-func (s *MockConnector) NumberOfGetCalls() int {
-	return s.noOfGetCalls
+func (mock *MockConnector) NumberOfGetCalls() int {
+	return mock.noOfGetCalls
 }
 
-func (s *MockConnector) ToString() string {
+func (mock *MockConnector) ToString() string {
 	return "s3"
 }
 
-func (s *MockConnector) Reset() {
-	s.getErr = nil
-	s.getPayload = nil
-	s.getResponse = nil
-	s.noOfGetCalls = 0
-	s.noOfPutCalls = 0
-	s.putErr = nil
-	s.putPayload = nil
+func (mock *MockConnector) Exists(key string) bool {
+	return mock.exists
+}
+
+func (mock *MockConnector) SetExists(exists bool) {
+	mock.exists = exists
+}
+
+func (mock *MockConnector) Reset() {
+	mock.getErr = nil
+	mock.getPayload = nil
+	mock.getResponse = nil
+	mock.noOfGetCalls = 0
+	mock.noOfPutCalls = 0
+	mock.putErr = nil
+	mock.putPayload = nil
+	mock.exists = false
 }

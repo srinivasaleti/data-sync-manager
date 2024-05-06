@@ -8,5 +8,6 @@ type Config struct {
 type Connector interface {
 	Get(key string) ([]byte, error)
 	Put(key string, data []byte) error
+	Exists(key string) bool
 	ToString() string
 }
