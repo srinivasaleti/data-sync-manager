@@ -27,7 +27,7 @@ func (f *Factory) GetConnector(connector connectors.Config) (connectors.Connecto
 		return s3.New(f.logger, s3Client, &httpClient.Client{})
 	}
 	if connector.Type == "local" {
-		return filesystem.New(f.logger), nil
+		return filesystem.New(f.logger, connector.Config)
 	}
 	return nil, ErrConnectorNotFound
 }

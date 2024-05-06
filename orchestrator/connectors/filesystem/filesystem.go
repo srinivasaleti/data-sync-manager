@@ -1,6 +1,8 @@
 package filesystem
 
 import (
+	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -8,9 +10,14 @@ import (
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
 )
 
+type Config struct {
+	OutDirectory string `json:"outdir"`
+}
+
 type FileSystemConnector struct {
 	connectors.Connector
 	logger logger.ILogger
+	Config
 }
 
 func (connector *FileSystemConnector) Get(key string) ([]byte, error) {
@@ -18,12 +25,13 @@ func (connector *FileSystemConnector) Get(key string) ([]byte, error) {
 }
 
 func (s *FileSystemConnector) Put(key string, data []byte) error {
-	if err := os.MkdirAll(filepath.Dir(key), 0755); err != nil {
+	keyPath := filepath.Join(s.OutDirectory, key)
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0755); err != nil {
 		s.logger.Error(err, "error while creating directory")
 		return nil
 	}
 	// Create the output file
-	outFile, err := os.Create(key)
+	outFile, err := os.Create(keyPath)
 	if err != nil {
 		s.logger.Error(err, "error creating output file")
 		return nil
@@ -39,12 +47,32 @@ func (s *FileSystemConnector) Put(key string, data []byte) error {
 	return nil
 }
 
+func parseConfig(configMap map[string]string) (*Config, error) {
+	if configMap == nil {
+		return nil, errors.New("configuration should not be nil")
+	}
+	configBytes, err := json.Marshal(configMap)
+	if err != nil {
+		return nil, err
+	}
+	config := Config{}
+	if err = json.Unmarshal(configBytes, &config); err != nil {
+		return nil, err
+	}
+	return &config, err
+}
+
 func (s *FileSystemConnector) ToString() string {
 	return "local"
 }
 
-func New(logger logger.ILogger) *FileSystemConnector {
+func New(logger logger.ILogger, configMap map[string]string) (*FileSystemConnector, error) {
+	config, err := parseConfig(configMap)
+	if err != nil {
+		return nil, err
+	}
 	return &FileSystemConnector{
 		logger: logger,
-	}
+		Config: *config,
+	}, nil
 }
