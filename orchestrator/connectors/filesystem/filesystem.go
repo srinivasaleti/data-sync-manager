@@ -24,16 +24,16 @@ func (connector *FileSystemConnector) Get(key string) ([]byte, error) {
 	return nil, nil
 }
 
-func (s *FileSystemConnector) Put(key string, data []byte) error {
-	keyPath := filepath.Join(s.OutDirectory, key)
+func (connector *FileSystemConnector) Put(key string, data []byte) error {
+	keyPath := filepath.Join(connector.OutDirectory, key)
 	if err := os.MkdirAll(filepath.Dir(keyPath), 0755); err != nil {
-		s.logger.Error(err, "error while creating directory")
+		connector.logger.Error(err, "error while creating directory")
 		return nil
 	}
 	// Create the output file
 	outFile, err := os.Create(keyPath)
 	if err != nil {
-		s.logger.Error(err, "error creating output file")
+		connector.logger.Error(err, "error creating output file")
 		return nil
 	}
 	defer outFile.Close()
@@ -41,7 +41,7 @@ func (s *FileSystemConnector) Put(key string, data []byte) error {
 	// Write to file
 	_, err = outFile.Write(data)
 	if err != nil {
-		s.logger.Error(err, "error writing payload to file")
+		connector.logger.Error(err, "error writing payload to file")
 		return nil
 	}
 	return nil
@@ -62,7 +62,7 @@ func parseConfig(configMap map[string]string) (*Config, error) {
 	return &config, err
 }
 
-func (s *FileSystemConnector) ToString() string {
+func (connector *FileSystemConnector) ToString() string {
 	return "filesystem"
 }
 

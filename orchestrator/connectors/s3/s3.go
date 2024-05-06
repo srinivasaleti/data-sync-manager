@@ -51,11 +51,11 @@ func (connector *S3Connector) Get(key string) ([]byte, error) {
 	return io.ReadAll(response.Body)
 }
 
-func (s *S3Connector) Put(key string, data []byte) error {
+func (connector *S3Connector) Put(key string, data []byte) error {
 	return nil
 }
 
-func (s *S3Connector) ToString() string {
+func (connector *S3Connector) ToString() string {
 	return "s3"
 }
 
