@@ -5,10 +5,10 @@ import (
 )
 
 type SyncConfig struct {
-	Cron      string
-	Source    connectors.Config
-	Target    connectors.Config
-	ObjectKey string
+	Cron      string            `yaml:"cron"`
+	Source    connectors.Config `yaml:"source"`
+	Target    connectors.Config `yaml:"target"`
+	ObjectKey string            `yaml:"objKey"`
 }
 
 func (s *SyncManager) scheduleSyncData(config SyncConfig) error {

@@ -1,8 +1,8 @@
 package connectors
 
 type Config struct {
-	Type   string
-	Config interface{}
+	Type   string            `yaml:"type"`
+	Config map[string]string `yaml:"config"`
 }
 
 type Connector interface {

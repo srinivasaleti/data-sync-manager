@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
+	"github.com/srinivasaleti/data-sync-manager/orchestrator/config"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/factory"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/scheduler"
@@ -21,15 +21,12 @@ func main() {
 	}
 	connectorsFactory := factory.New(logger)
 	s := syncmanager.New(connectorsFactory, jobScheduler, logger)
-
-	s.Manage([]syncmanager.SyncConfig{
-		{
-			Cron:      "* * * * * *",
-			Source:    connectors.Config{Type: "s3"},
-			ObjectKey: "20240101_062739.jpg",
-			Target:    connectors.Config{Type: "local"},
-		},
-	})
+	config, err := config.GetConfig("input.yaml")
+	if err != nil {
+		logger.Error(err, "unable read config")
+		return
+	}
+	s.Manage(config)
 	jobScheduler.Start()
 	<-ctx.Done()
 	logger.Info("shutting down scheduler")
