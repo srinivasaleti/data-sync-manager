@@ -63,7 +63,7 @@ func parseConfig(configMap map[string]string) (*Config, error) {
 }
 
 func (s *FileSystemConnector) ToString() string {
-	return "local"
+	return "filesystem"
 }
 
 func New(logger logger.ILogger, configMap map[string]string) (*FileSystemConnector, error) {
