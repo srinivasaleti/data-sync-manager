@@ -66,6 +66,7 @@ func (s *SyncManager) syncObjects(source connectors.Connector, target connectors
 // syncObject syncs a single object between the source and target connectors.
 func (s *SyncManager) syncObject(source connectors.Connector, target connectors.Connector, objectKey string) error {
 	if target.Exists(objectKey) {
+		s.logger.Info("skipping syncing object as it is already exists in source", "source", source.ToString(), "target", target.ToString(), "key", objectKey)
 		return nil
 	}
 	s.logger.Info("syncing data", "source", source.ToString(), "target", target.ToString(), "key", objectKey)

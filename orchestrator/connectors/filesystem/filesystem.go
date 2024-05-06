@@ -20,10 +20,6 @@ type FileSystemConnector struct {
 	Config
 }
 
-func (connector *FileSystemConnector) Get(key string) ([]byte, error) {
-	return nil, nil
-}
-
 func (connector *FileSystemConnector) Put(key string, data []byte) error {
 	keyPath := filepath.Join(connector.OutDirectory, key)
 	if err := os.MkdirAll(filepath.Dir(keyPath), 0755); err != nil {
