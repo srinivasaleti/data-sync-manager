@@ -27,7 +27,7 @@ type Config struct {
 type IClient interface {
 	Sign(req *http.Request) (http.Header, error)
 	GetObjectUrl(key string) string
-	ListKeys() ([]string, error)
+	ListKeys(callback func(keys []string)) ([]string, error)
 }
 
 type S3Client struct {
@@ -59,7 +59,8 @@ func (s3 *S3Client) GetObjectUrl(key string) string {
 // ListKeys returns a list of keys (object identifiers) in the S3 bucket.
 // It recursively checks all the keys inside a folder and subfolder too.
 // It returns the list of keys or an error if listing fails.
-func (client *S3Client) ListKeys() ([]string, error) {
+// It also accepts callback function which will be called after fetching all keys in a page.
+func (client *S3Client) ListKeys(callback func(keys []string)) ([]string, error) {
 	session, err := session.NewSession(&aws.Config{
 		Region: aws.String(client.Region),
 		Credentials: credentials.NewStaticCredentials(
@@ -74,10 +75,13 @@ func (client *S3Client) ListKeys() ([]string, error) {
 	svc := s3.New(session)
 	var allKeys []string
 	params := &s3.ListObjectsInput{
-		Bucket: aws.String(client.Bucket),
+		Bucket:  aws.String(client.Bucket),
+		MaxKeys: aws.Int64(2),
 	}
 	err = svc.ListObjectsPages(params, func(page *s3.ListObjectsOutput, lastPage bool) bool {
-		allKeys = append(allKeys, extractKeysFromPage(page)...)
+		keys := extractKeysFromPage(page)
+		allKeys = append(allKeys, keys...)
+		callback(keys)
 		return !lastPage
 	})
 	if err != nil {

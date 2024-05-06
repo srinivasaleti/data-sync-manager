@@ -88,7 +88,8 @@ func (mock *MockConnector) SetExists(exists bool) {
 	mock.exists = exists
 }
 
-func (mock *MockConnector) ListKeys() ([]string, error) {
+func (mock *MockConnector) ListKeys(callback func(keys []string)) ([]string, error) {
+	callback(mock.keys)
 	return mock.keys, mock.listKeysErr
 }
 

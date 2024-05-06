@@ -55,8 +55,8 @@ func (connector *S3Connector) ToString() string {
 	return "s3"
 }
 
-func (connector *S3Connector) ListKeys() ([]string, error) {
-	return connector.S3Client.ListKeys()
+func (connector *S3Connector) ListKeys(callback func(key []string)) ([]string, error) {
+	return connector.S3Client.ListKeys(callback)
 }
 
 func parseS3Err(body io.ReadCloser) s3.Error {

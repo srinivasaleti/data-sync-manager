@@ -8,6 +8,7 @@ type Scheduler struct {
 	scheduler gocron.Scheduler
 }
 
+// IScheduler represents a scheduler interface.
 type IScheduler interface {
 	ScheduleJob(cronExpression string, task Task) (string, error)
 	Start()
@@ -16,6 +17,8 @@ type IScheduler interface {
 
 type Task func()
 
+// ScheduleJob schedules a new job with the provided cron expression and task.
+// It returns the ID of the scheduled job and any error encountered during scheduling.
 func (s *Scheduler) ScheduleJob(cronExpression string, task Task) (string, error) {
 	job, err := s.scheduler.NewJob(
 		gocron.CronJob(cronExpression, true),
