@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	httpClient "github.com/srinivasaleti/data-sync-manager/orchestrator/clients/httpclient"
+	httpClient "github.com/srinivasaleti/data-sync-manager/orchestrator/clients/httpclient/mocks"
 	s3clientmocks "github.com/srinivasaleti/data-sync-manager/orchestrator/clients/s3client/mocks"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
 	"github.com/stretchr/testify/assert"

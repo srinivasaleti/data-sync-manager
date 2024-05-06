@@ -11,6 +11,10 @@ test: ## Run go unit tests
 test:
 	@go test ./...
 
+.PHONY: test-coverage
+test-coverage:  ## Run go test coverage
+test-coverage:
+	@go test $(shell go list ./... | grep -v 'mocks') -coverprofile=coverage.xml
 
 .PHONY: build
 build:

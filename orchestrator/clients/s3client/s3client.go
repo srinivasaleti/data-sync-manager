@@ -46,10 +46,6 @@ func (s3 *S3Client) Sign(req *http.Request) (http.Header, error) {
 	return signer.Sign(req, nil, "s3", s3.Region, time.Now())
 }
 
-func (s3 *S3Client) GetConfig() Config {
-	return *s3.Config
-}
-
 // GetObjectUrl returns the URL for accessing an object in the S3 bucket
 // specified by the given key.
 func (s3 *S3Client) GetObjectUrl(key string) string {
@@ -101,7 +97,7 @@ func extractKeysFromPage(page *s3.ListObjectsOutput) []string {
 	return allKeys
 }
 
-func parseS3ClientConfig(configInterface interface{}) (*Config, error) {
+func parseS3ClientConfig(configInterface map[string]string) (*Config, error) {
 	if configInterface == nil {
 		return nil, errors.New("configuration should not be nil")
 	}
@@ -116,7 +112,7 @@ func parseS3ClientConfig(configInterface interface{}) (*Config, error) {
 	return &config, err
 }
 
-func NewS3Client(configMap interface{}) (*S3Client, error) {
+func NewS3Client(configMap map[string]string) (*S3Client, error) {
 	config, err := parseS3ClientConfig(configMap)
 	if err != nil {
 		return nil, err

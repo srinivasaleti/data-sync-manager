@@ -1,6 +1,8 @@
 package factory
 
 import (
+	"errors"
+
 	httpClient "github.com/srinivasaleti/data-sync-manager/orchestrator/clients/httpclient"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/clients/s3client"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
@@ -8,6 +10,8 @@ import (
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors/s3"
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/logger"
 )
+
+var ErrConnectorNotFound = errors.New("connector not found")
 
 type Factory struct {
 	IFactory

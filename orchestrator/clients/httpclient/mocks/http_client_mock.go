@@ -1,13 +1,17 @@
 package httpClient
 
-import "net/http"
+import (
+	"net/http"
+
+	httpClient "github.com/srinivasaleti/data-sync-manager/orchestrator/clients/httpclient"
+)
 
 // MockHttpClient mocks http client.
 type MockHttpClient struct {
 	response *http.Response
 	request  *http.Request
 	err      error
-	IClient
+	httpClient.IClient
 }
 
 func (client *MockHttpClient) Do(req *http.Request) (*http.Response, error) {
