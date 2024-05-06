@@ -3,3 +3,4 @@ cover.html
 .DS_Store
 test/
 input.yaml
+bin
