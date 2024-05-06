@@ -47,6 +47,14 @@ func (connector *S3Connector) Get(key string) ([]byte, error) {
 	return io.ReadAll(response.Body)
 }
 
+func (connector *S3Connector) Put(key string, data []byte) error {
+	return errors.New("s3 connector put not implemented yet")
+}
+
+func (connector *S3Connector) Exists(key string) bool {
+	return false
+}
+
 func (connector *S3Connector) ToString() string {
 	return "s3"
 }

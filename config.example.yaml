@@ -1,11 +1,11 @@
-- cron: "*/5 * * * * *" #Runs every 5 seconds
+- cron: "*/30 * * * * *" # Cron expression
   source:
     type: "s3" # At the moment S3 is the valid source type
     config:
-      accessKey: "access_key"
-      secretKey: "secret_key"
-      region: "region"
-      bucket: "bucket"
+      accessKey: "access_key" # AWS access key
+      secretKey: "secret_key" # AWS secret key
+      region: "region" # AWS region
+      bucket: "bucket" # AWS S3 bucket
   target:
     type: "filesystem" # At the moment filesystem is the valid target type
     config:
