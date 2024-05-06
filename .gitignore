@@ -5,3 +5,4 @@ test/
 input.yaml
 bin
 config.yaml
+out/

@@ -1,12 +1,12 @@
-- cron: "*/5 * * * * *"
+- cron: "*/5 * * * * *" #Runs every 5 seconds
   source:
-    type: "s3"
+    type: "s3" # At the moment S3 is the valid source type
     config:
       accessKey: "access_key"
       secretKey: "secret_key"
       region: "region"
       bucket: "bucket"
   target:
-    type: "filesystem"
+    type: "filesystem" # At the moment filesystem is the valid target type
     config:
-      outdir: "./out"
+      outdir: "./out" ##Better not to change the outdir. Docker volume has been created with this directory. If you change it you can only view the files inside docker container

@@ -1,4 +1,5 @@
 include tools/make/golang.mk
+include tools/make/docker.mk
 
 .PHONY: help
 help: ## Help
