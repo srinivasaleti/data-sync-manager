@@ -1,0 +1,12 @@
+- cron: "*/5 * * * * *"
+  source:
+    type: "s3"
+    config:
+      accessKey: "access_key"
+      secretKey: "secret_key"
+      region: "region"
+      bucket: "bucket"
+  target:
+    type: "filesystem"
+    config:
+      outdir: "./out"
