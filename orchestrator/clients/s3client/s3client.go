@@ -5,12 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+// Config represents s3 configuration.
 type Config struct {
 	AccessKey string `json:"accessKey"`
 	SecretKey string `json:"secretKey"`
@@ -18,9 +23,11 @@ type Config struct {
 	Bucket    string `json:"bucket"`
 }
 
+// IClient represents an interface for interacting with S3.
 type IClient interface {
 	Sign(req *http.Request) (http.Header, error)
 	GetObjectUrl(key string) string
+	ListKeys() ([]string, error)
 }
 
 type S3Client struct {
@@ -28,6 +35,8 @@ type S3Client struct {
 	IClient
 }
 
+// Sign signs an HTTP request for S3 authentication.
+// It returns the signed request headers or an error if signing fails.
 func (s3 *S3Client) Sign(req *http.Request) (http.Header, error) {
 	if s3.Config == nil {
 		return nil, errors.New("client config should not be empty")
@@ -41,8 +50,51 @@ func (s3 *S3Client) GetConfig() Config {
 	return *s3.Config
 }
 
+// GetObjectUrl returns the URL for accessing an object in the S3 bucket
+// specified by the given key.
 func (s3 *S3Client) GetObjectUrl(key string) string {
 	return fmt.Sprintf("https://s3.%s.amazonaws.com/%s/%s", s3.Region, s3.Bucket, key)
+}
+
+// ListKeys returns a list of keys (object identifiers) in the S3 bucket.
+// It recursively checks all the keys inside a folder and subfolder too.
+// It returns the list of keys or an error if listing fails.
+func (client *S3Client) ListKeys() ([]string, error) {
+	session, err := session.NewSession(&aws.Config{
+		Region: aws.String(client.Region),
+		Credentials: credentials.NewStaticCredentials(
+			client.AccessKey,
+			client.SecretKey,
+			"",
+		),
+	})
+	if err != nil {
+		return nil, err
+	}
+	svc := s3.New(session)
+	var allKeys []string
+	params := &s3.ListObjectsInput{
+		Bucket: aws.String(client.Bucket),
+	}
+	err = svc.ListObjectsPages(params, func(page *s3.ListObjectsOutput, lastPage bool) bool {
+		allKeys = append(allKeys, extractKeysFromPage(page)...)
+		return !lastPage
+	})
+	if err != nil {
+		return nil, err
+	}
+	return allKeys, nil
+}
+
+func extractKeysFromPage(page *s3.ListObjectsOutput) []string {
+	var allKeys []string
+	for _, obj := range page.Contents {
+		objKey := *obj.Key
+		if !strings.HasSuffix(objKey, "/") {
+			allKeys = append(allKeys, *obj.Key)
+		}
+	}
+	return allKeys
 }
 
 func parseS3ClientConfig(configInterface interface{}) (*Config, error) {

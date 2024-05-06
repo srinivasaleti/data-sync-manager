@@ -47,13 +47,13 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 		mockFactory.SetConnector("s3", sourceConnector)
 		mockFactory.SetConnector("local", targetConnector)
 		sourceConnector.SetGetResponse(file)
+		sourceConnector.SetListKeys([]string{"id1", "id2"})
 		fileBytes, _ := json.Marshal(file)
 
 		err := syncManager.scheduleSyncData(SyncConfig{
-			Cron:      "* * * * * 1",
-			Source:    connectors.Config{Type: "s3"},
-			Target:    connectors.Config{Type: "local"},
-			ObjectKey: "id",
+			Cron:   "* * * * * 1",
+			Source: connectors.Config{Type: "s3"},
+			Target: connectors.Config{Type: "local"},
 		})
 
 		assert.Nil(t, err)
@@ -61,17 +61,32 @@ func TestScheduleAJobToSyncData(t *testing.T) {
 
 		mockScheduler.GetScheduledTask()()
 
-		assert.True(t, sourceConnector.GetShouldBeCalledWith("id"))
-		assert.True(t, targetConnector.PutShouldBeCalledWith("id", fileBytes))
+		assert.True(t, sourceConnector.GetShouldBeCalledWith("id1"))
+		assert.True(t, targetConnector.PutShouldBeCalledWith("id1", fileBytes))
+		assert.True(t, sourceConnector.GetShouldBeCalledWith("id2"))
+		assert.True(t, targetConnector.PutShouldBeCalledWith("id2", fileBytes))
 	})
 }
 
 func TestSyncData(t *testing.T) {
+	t.Run("should return error when unable to list keys", func(t *testing.T) {
+		reset()
+		mockFactory.SetConnector("s3", sourceConnector)
+		mockFactory.SetConnector("local", targetConnector)
+		listKeysErr := errors.New("unable to list keys")
+		sourceConnector.SetListKeysErr(listKeysErr)
+
+		err := syncManager.syncData(sourceConnector, targetConnector)
+		assert.Equal(t, err, listKeysErr)
+	})
+}
+
+func TestSyncObject(t *testing.T) {
 	t.Run("should skip if target has already specified object", func(t *testing.T) {
 		reset()
 		targetConnector.SetExists(true)
 
-		err := syncManager.syncData(sourceConnector, targetConnector, "id")
+		err := syncManager.syncObject(sourceConnector, targetConnector, "id")
 
 		assert.Nil(t, err)
 		assert.False(t, sourceConnector.GetShouldBeCalledWith("id"))
@@ -83,7 +98,7 @@ func TestSyncData(t *testing.T) {
 		sourceConnectorGetErr := errors.New("unable to get from source")
 		sourceConnector.SetGetErr(sourceConnectorGetErr)
 
-		err := syncManager.syncData(sourceConnector, targetConnector, "id")
+		err := syncManager.syncObject(sourceConnector, targetConnector, "id")
 
 		assert.Error(t, err)
 		assert.Equal(t, err, sourceConnectorGetErr)
@@ -97,7 +112,7 @@ func TestSyncData(t *testing.T) {
 		sourceConnector.SetGetResponse(file)
 		targetConnector.SetPutErr(targetConnectorPutErr)
 
-		err := syncManager.syncData(sourceConnector, targetConnector, "id")
+		err := syncManager.syncObject(sourceConnector, targetConnector, "id")
 
 		assert.Error(t, err)
 		assert.Equal(t, err, targetConnectorPutErr)
@@ -110,7 +125,7 @@ func TestSyncData(t *testing.T) {
 		reset()
 		sourceConnector.SetGetResponse(file)
 		fileBytes, _ := json.Marshal(file)
-		err := syncManager.syncData(sourceConnector, targetConnector, "id")
+		err := syncManager.syncObject(sourceConnector, targetConnector, "id")
 
 		assert.Nil(t, err)
 		assert.True(t, sourceConnector.GetShouldBeCalledWith("id"))

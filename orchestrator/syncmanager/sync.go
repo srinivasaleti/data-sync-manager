@@ -1,14 +1,18 @@
 package syncmanager
 
 import (
+	"errors"
+	"sync"
+
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
 )
 
+var errConnectorsRequired = errors.New("source and target connectors are required")
+
 type SyncConfig struct {
-	Cron      string            `yaml:"cron"`
-	Source    connectors.Config `yaml:"source"`
-	Target    connectors.Config `yaml:"target"`
-	ObjectKey string            `yaml:"objKey"`
+	Cron   string            `yaml:"cron"`
+	Source connectors.Config `yaml:"source"`
+	Target connectors.Config `yaml:"target"`
 }
 
 func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
@@ -23,17 +27,34 @@ func (s *SyncManager) scheduleSyncData(config SyncConfig) error {
 		return err
 	}
 	s.scheduler.ScheduleJob(config.Cron, func() {
-		s.syncData(sourceConnector, targetConnector, config.ObjectKey)
+		s.syncData(sourceConnector, targetConnector)
 	})
 	return nil
 }
 
-func (s *SyncManager) syncData(source connectors.Connector, target connectors.Connector, objectKey string) error {
-	s.logger.Info("syncing data", "source", source.ToString(), "target", target.ToString())
+func (s *SyncManager) syncData(source connectors.Connector, target connectors.Connector) error {
+	keys, err := source.ListKeys()
+	if err != nil {
+		s.logger.Info("unable to list keys")
+		return err
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(keys))
+	for _, key := range keys {
+		go func(k string) {
+			defer wg.Done()
+			s.syncObject(source, target, k)
+		}(key)
+	}
+	wg.Wait()
+	return nil
+}
+
+func (s *SyncManager) syncObject(source connectors.Connector, target connectors.Connector, objectKey string) error {
 	if target.Exists(objectKey) {
-		s.logger.Info("specified key is already exists in obj key", "key", objectKey)
 		return nil
 	}
+	s.logger.Info("syncing data", "source", source.ToString(), "target", target.ToString(), "key", objectKey)
 	data, err := source.Get(objectKey)
 	if err != nil {
 		s.logger.Error(err, "unable to get the data from source")
@@ -44,6 +65,6 @@ func (s *SyncManager) syncData(source connectors.Connector, target connectors.Co
 		s.logger.Error(err, "unable to create the data in target")
 		return err
 	}
-	s.logger.Info("successfully synced data", "source", source.ToString(), "target", target.ToString())
+	s.logger.Info("successfully synced data", "source", source.ToString(), "target", target.ToString(), "key", objectKey)
 	return nil
 }

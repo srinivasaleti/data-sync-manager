@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"github.com/srinivasaleti/data-sync-manager/orchestrator/connectors"
@@ -11,17 +12,19 @@ import (
 type MockConnector struct {
 	connectors.Connector
 	getErr       error
-	getPayload   interface{}
+	getKeys      []interface{}
 	getResponse  interface{}
 	noOfPutCalls int
 	noOfGetCalls int
 	putErr       error
 	putPayload   interface{}
 	exists       bool
+	keys         []string
+	listKeysErr  error
 }
 
 func (mock *MockConnector) Get(key string) ([]byte, error) {
-	mock.getPayload = key
+	mock.getKeys = append(mock.getKeys, key)
 	mock.noOfGetCalls = mock.noOfGetCalls + 1
 	byteResponse, err := json.Marshal(mock.getResponse)
 	if err != nil {
@@ -39,8 +42,11 @@ func (mock *MockConnector) SetGetErr(err error) {
 }
 
 func (mock *MockConnector) GetShouldBeCalledWith(id string) bool {
-	if mock.getPayload == id {
-		return true
+	for _, payload := range mock.getKeys {
+		fmt.Println(payload)
+		if payload == id {
+			return true
+		}
 	}
 	return false
 }
@@ -82,9 +88,21 @@ func (mock *MockConnector) SetExists(exists bool) {
 	mock.exists = exists
 }
 
+func (mock *MockConnector) ListKeys() ([]string, error) {
+	return mock.keys, mock.listKeysErr
+}
+
+func (mock *MockConnector) SetListKeys(keys []string) {
+	mock.keys = keys
+}
+
+func (mock *MockConnector) SetListKeysErr(err error) {
+	mock.listKeysErr = err
+}
+
 func (mock *MockConnector) Reset() {
 	mock.getErr = nil
-	mock.getPayload = nil
+	mock.getKeys = nil
 	mock.getResponse = nil
 	mock.noOfGetCalls = 0
 	mock.noOfPutCalls = 0

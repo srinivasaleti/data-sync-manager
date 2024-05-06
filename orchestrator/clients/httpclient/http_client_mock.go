@@ -2,6 +2,7 @@ package httpClient
 
 import "net/http"
 
+// MockHttpClient mocks http client.
 type MockHttpClient struct {
 	response *http.Response
 	request  *http.Request

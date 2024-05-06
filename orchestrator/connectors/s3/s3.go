@@ -27,25 +27,21 @@ func (connector *S3Connector) Get(key string) ([]byte, error) {
 	// Create the URL for the S3 object
 	req, err := http.NewRequest("GET", connector.S3Client.GetObjectUrl(key), nil)
 	if err != nil {
-		connector.Logger.Error(err, "unable to create request", "id", key)
 		return nil, err
 	}
 	_, err = connector.S3Client.Sign(req)
 	if err != nil {
-		connector.Logger.Error(err, "unable to sign request", "id", key)
 		return nil, err
 	}
 	// Send the request
 	response, err := connector.HttpClient.Do(req)
 	if err != nil {
-		connector.Logger.Error(err, "unable to send request", "id", key)
 		return nil, err
 	}
 	defer response.Body.Close()
 	if response.StatusCode >= 400 && response.StatusCode <= 599 {
 		s3Err := parseS3Err(response.Body)
 		err := errors.New(*s3Err.Message)
-		connector.Logger.Error(err, "error response from s3", "id", key, "status", response.StatusCode, "code", s3Err.Code, "message", s3Err.Message)
 		return nil, err
 	}
 	return io.ReadAll(response.Body)
@@ -57,6 +53,10 @@ func (connector *S3Connector) Put(key string, data []byte) error {
 
 func (connector *S3Connector) ToString() string {
 	return "s3"
+}
+
+func (connector *S3Connector) ListKeys() ([]string, error) {
+	return connector.S3Client.ListKeys()
 }
 
 func parseS3Err(body io.ReadCloser) s3.Error {

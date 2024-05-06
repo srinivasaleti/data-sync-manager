@@ -6,6 +6,7 @@ type Config struct {
 }
 
 type Connector interface {
+	ListKeys() ([]string, error)
 	Get(key string) ([]byte, error)
 	Put(key string, data []byte) error
 	Exists(key string) bool
