@@ -18,23 +18,23 @@ import (
 
 type S3Connector struct {
 	connectors.Connector
-	S3Client   s3client.IClient
-	HttpClient httpClient.IClient
-	Logger     logger.ILogger
+	s3Client   s3client.IClient
+	httpClient httpClient.IClient
+	logger     logger.ILogger
 }
 
 func (connector *S3Connector) Get(key string) ([]byte, error) {
 	// Create the URL for the S3 object
-	req, err := http.NewRequest("GET", connector.S3Client.GetObjectUrl(key), nil)
+	req, err := http.NewRequest("GET", connector.s3Client.GetObjectUrl(key), nil)
 	if err != nil {
 		return nil, err
 	}
-	_, err = connector.S3Client.Sign(req)
+	_, err = connector.s3Client.Sign(req)
 	if err != nil {
 		return nil, err
 	}
 	// Send the request
-	response, err := connector.HttpClient.Do(req)
+	response, err := connector.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (connector *S3Connector) ToString() string {
 }
 
 func (connector *S3Connector) ListKeys(callback func(key []string)) ([]string, error) {
-	return connector.S3Client.ListKeys(callback)
+	return connector.s3Client.ListKeys(callback)
 }
 
 func parseS3Err(body io.ReadCloser) s3.Error {
@@ -76,8 +76,8 @@ func parseS3Err(body io.ReadCloser) s3.Error {
 
 func New(logger logger.ILogger, client s3client.IClient, httpClient httpClient.IClient) (*S3Connector, error) {
 	return &S3Connector{
-		HttpClient: httpClient,
-		Logger:     logger,
-		S3Client:   client,
+		httpClient: httpClient,
+		logger:     logger,
+		s3Client:   client,
 	}, nil
 }
