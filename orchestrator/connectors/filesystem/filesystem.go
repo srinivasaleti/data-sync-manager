@@ -21,7 +21,11 @@ type FileSystemConnector struct {
 }
 
 func (connector *FileSystemConnector) Get(key string) ([]byte, error) {
-	return nil, errors.New("filesystem get not implemented yet")
+	return nil, errors.New("filesystem get method not implemented yet")
+}
+
+func (connector *FileSystemConnector) ListKeys(callback func(keys []string)) ([]string, error) {
+	return nil, errors.New("filesystem keys method not implemented yet")
 }
 
 func (connector *FileSystemConnector) Put(key string, data []byte) error {

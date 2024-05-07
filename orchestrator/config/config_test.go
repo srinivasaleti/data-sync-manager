@@ -38,3 +38,47 @@ func TestConfig(t *testing.T) {
 		})
 	})
 }
+
+func TestValidate(t *testing.T) {
+
+	t.Run("validate cron", func(t *testing.T) {
+		err := validate(&syncmanager.SyncConfig{})
+		assert.Equal(t, err, errCronExpressionShouldNotBeEmpty)
+	})
+
+	t.Run("validate source type", func(t *testing.T) {
+		err := validate(&syncmanager.SyncConfig{
+			Cron: "* * * * * *",
+			Source: connectors.Config{
+				Type: "invalid source",
+			},
+		})
+		assert.Equal(t, err, errInvalidSourceType)
+	})
+
+	t.Run("validate target type", func(t *testing.T) {
+		err := validate(&syncmanager.SyncConfig{
+			Cron: "* * * * * *",
+			Source: connectors.Config{
+				Type: "s3",
+			},
+			Target: connectors.Config{
+				Type: "invalid target",
+			},
+		})
+		assert.Equal(t, err, errInvalidTargetType)
+	})
+
+	t.Run("valid config", func(t *testing.T) {
+		err := validate(&syncmanager.SyncConfig{
+			Cron: "* * * * * *",
+			Source: connectors.Config{
+				Type: "s3",
+			},
+			Target: connectors.Config{
+				Type: "filesystem",
+			},
+		})
+		assert.NoError(t, err)
+	})
+}
